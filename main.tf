@@ -4,14 +4,6 @@ Elle comprend les composants réseau nécessaires, tels qu'un VPC, un sous-rése
 Des identifiants AWS sont requis pour appliquer cette configuration. Ils peuvent être définis à l'aide de variables d'environnement ou de l'interface CLI AWS.
 */
 
-variable "name_label" {}
-
-variable "name_label" {
-  type = value
-  description = "string"
-  default = value
-}
-
 terraform {
   required_providers {
     aws = {
@@ -26,7 +18,7 @@ terraform {
 ##################################################################################
 
 provider "aws" {
-  region     = "us-east-1"
+  region = var.aws_region
 }
 
 ##################################################################################
@@ -43,8 +35,8 @@ data "aws_ssm_parameter" "amzn2_linux" {
 
 # NETWORKING #
 resource "aws_vpc" "app" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
+  cidr_block           = var.vpc_cidr_block
+  enable_dns_hostnames = var.vpc_enable_dns_hostnames
 
 }
 
@@ -54,9 +46,9 @@ resource "aws_internet_gateway" "app" {
 }
 
 resource "aws_subnet" "public_subnet1" {
-  cidr_block              = "10.0.0.0/24"
+  cidr_block              = var.vpc_subnet_cidr
   vpc_id                  = aws_vpc.app.id
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch = var.map_public_ip_on_launch
 }
 
 # ROUTING #
@@ -82,8 +74,8 @@ resource "aws_security_group" "nginx_sg" {
 
   # HTTP access from anywhere
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = var.http_port
+    to_port     = var.http_port
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -99,10 +91,10 @@ resource "aws_security_group" "nginx_sg" {
 
 # INSTANCES #
 resource "aws_instance" "nginx1" {
-  ami                    = nonsensitive(data.aws_ssm_parameter.amzn2_linux.value)
-  instance_type          = "t2.micro"
-  subnet_id              = aws_subnet.public_subnet1.id
-  vpc_security_group_ids = [aws_security_group.nginx_sg.id]
+  ami                         = data.aws_ssm_parameter.amzn2_linux.value
+  instance_type               = var.ec2_instance_type
+  subnet_id                   = aws_subnet.public_subnet1.id
+  vpc_security_group_ids      = [aws_security_group.nginx_sg.id]
   user_data_replace_on_change = true
 
   user_data = <<EOF
