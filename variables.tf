@@ -39,3 +39,20 @@ variable "ec2_instance_type" {
   description = "Le type d'instance EC2 à lancer"
   type        = string
 }
+
+variable "company_name" {
+  description = "Le nom de la société"
+  type        = string
+  default     = "HeH"
+}
+
+variable "project" {
+  description = "Le nom du projet"
+  type        = string
+}
+
+variable "environment" {
+  description = "L'environnement pour le déploiement(e.g., dev, staging, prod)"
+  type        = string
+}
+

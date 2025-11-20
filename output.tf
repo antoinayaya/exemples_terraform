@@ -1,7 +1,7 @@
 //Démo 
 output "aws_instance_public_dns" {
   description = "Nom d'hôte DNS public de l'instance EC2"
-  value       = aws_instance.nginx1.public_dns
+  value       = "http://${aws_instance.nginx1.public_dns}:${var.http_port}"
 }
 
 //Exercice
