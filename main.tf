@@ -19,7 +19,7 @@ terraform {
 ##################################################################################
 
 provider "aws" {
-  region     = "us-east-1"
+  region     = var.aws_region
 }
 
 ##################################################################################
@@ -36,8 +36,8 @@ data "aws_ssm_parameter" "amzn2_linux" {
 
 # NETWORKING #
 resource "aws_vpc" "app" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
+  cidr_block           = var.vpc_cidr_block
+  enable_dns_hostnames = var.vpc_enable_dns_hostnames
 
 }
 
@@ -47,7 +47,7 @@ resource "aws_internet_gateway" "app" {
 }
 
 resource "aws_subnet" "public_subnet1" {
-  cidr_block              = "10.0.0.0/24"
+  cidr_block              = var.vpc_cidr_block
   vpc_id                  = aws_vpc.app.id
   map_public_ip_on_launch = true
 }
@@ -57,7 +57,7 @@ resource "aws_route_table" "app" {
   vpc_id = aws_vpc.app.id
 
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block = var.vpc_cidr_block
     gateway_id = aws_internet_gateway.app.id
   }
 }
@@ -75,25 +75,25 @@ resource "aws_security_group" "nginx_sg" {
 
   # HTTP access from anywhere
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = var.http_port
+    to_port     = var.http_port
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.vpc_cidr_block
   }
 
   # outbound internet access
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = var.http_port
+    to_port     = var.http_port
+    protocol    = var.environment
+    cidr_blocks = var.vpc_cidr_block
   }
 }
 
 # INSTANCES #
 resource "aws_instance" "nginx1" {
   ami                    = nonsensitive(data.aws_ssm_parameter.amzn2_linux.value)
-  instance_type          = "t2.micro"
+  instance_type          = var.ec2_instance_type
   subnet_id              = aws_subnet.public_subnet1.id
   vpc_security_group_ids = [aws_security_group.nginx_sg.id]
   user_data_replace_on_change = true
