@@ -4,13 +4,6 @@ Elle comprend les composants réseau nécessaires, tels qu'un VPC, un sous-rése
 Des identifiants AWS sont requis pour appliquer cette configuration. Ils peuvent être définis à l'aide de variables d'environnement ou de l'interface CLI AWS.
 */
 
-variable "name_label" {}
-
-variable "name_label" {
-  type = value
-  description = "string"
-  default = value
-}
 
 terraform {
   required_providers {
